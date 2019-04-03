@@ -1,13 +1,13 @@
 import React, { Component } from 'react'
 import { Route, Link } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import AppContext from '../AppContext'
 import NoteListNav from '../NoteListNav/NoteListNav'
 import NotePageNav from '../NotePageNav/NotePageNav'
 import NoteListMain from '../NoteListMain/NoteListMain'
 import NotePageMain from '../NotePageMain/NotePageMain'
 import AddFolder from '../AddFolder/AddFolder'
 import AddNote from '../AddNote/AddNote'
-import dummyStore from '../dummy-store'
 import { getNotesForFolder, findNote, findFolder } from '../notes-helpers'
 import './App.css'
 
@@ -18,8 +18,19 @@ class App extends Component {
   };
 
   componentDidMount() {
-    // fake date loading from API call
-    setTimeout(() => this.setState(dummyStore), 600)
+    fetch('http://localhost:9090/folders')
+      .then(res => res.json())
+      .then(resJson => this.setState({
+        folders: resJson,
+      }))
+      .catch(error => console.log(error))
+
+    fetch('http://localhost:9090/notes')
+      .then(res => res.json())
+      .then(resJson => this.setState({
+        notes: resJson,
+      }))
+      .catch(error => console.log(error))
   }
 
   renderNavRoutes() {
@@ -31,13 +42,7 @@ class App extends Component {
             exact
             key={path}
             path={path}
-            render={routeProps =>
-              <NoteListNav
-                folders={folders}
-                notes={notes}
-                {...routeProps}
-              />
-            }
+            component={NoteListNav}
           />
         )}
         <Route
@@ -106,36 +111,46 @@ class App extends Component {
         />
         <Route
           path='/add-note'
-          render={routeProps => {
-            return (
-              <AddNote
-                {...routeProps}
-                folders={folders}
-              />
-            )
-          }}
+          component={AddNote}
         />
       </>
     )
   }
 
+  handleDeleteNote = (id) => {
+    let newNotes = this.state.notes.filter((note) => {
+      return note.id !== id
+    })
+    this.setState({
+      notes: newNotes,
+    })
+  }
+
   render() {
+    const contextValue = {
+      folders: this.state.folders,
+      notes: this.state.notes,
+      deleteNote: this.handleDeleteNote,
+    }
+
     return (
-      <div className='App'>
-        <nav className='App__nav'>
-          {this.renderNavRoutes()}
-        </nav>
-        <header className='App__header'>
-          <h1>
-            <Link to='/'>Noteful</Link>
-            {' '}
-            <FontAwesomeIcon icon='check-double' />
-          </h1>
-        </header>
-        <main className='App__main'>
-          {this.renderMainRoutes()}
-        </main>
-      </div>
+      <AppContext.Provider value={contextValue}>
+        <div className='App'>
+          <nav className='App__nav'>
+            {this.renderNavRoutes()}
+          </nav>
+          <header className='App__header'>
+            <h1>
+              <Link to='/'>Noteful</Link>
+              {' '}
+              <FontAwesomeIcon icon='check-double' />
+            </h1>
+          </header>
+          <main className='App__main'>
+            {this.renderMainRoutes()}
+          </main>
+        </div>
+      </AppContext.Provider>
     )
   }
 }
