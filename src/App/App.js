@@ -33,6 +33,35 @@ class App extends Component {
       .catch(error => console.log(error))
   }
 
+  postFolderName(folderName) {
+    const url = 'http://localhost:9090/folders'
+    fetch(url, {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({name: folderName})
+    })
+    .then(res=>res.json())
+    .then(res => console.log(res));
+  }
+
+  addNote(event, noteName, noteContent, folderId) {
+    console.log('noteName', noteName);
+    const url = 'http://localhost:9090/notes'
+    fetch(url, {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({name: noteName, content: noteContent, folderId: folderId})
+    })
+    .then(res=>res.json())
+    .then(res => console.log(res));
+  }
+
   renderNavRoutes() {
     const { notes, folders } = this.state
     return (
@@ -72,7 +101,7 @@ class App extends Component {
   }
 
   renderMainRoutes() {
-    const { notes, folders } = this.state
+    const { notes } = this.state
     return (
       <>
         {['/', '/folder/:folderId'].map(path =>
@@ -131,6 +160,8 @@ class App extends Component {
       folders: this.state.folders,
       notes: this.state.notes,
       deleteNote: this.handleDeleteNote,
+      addFolder: this.postFolderName,
+      addNote: this.addNote
     }
 
     return (
