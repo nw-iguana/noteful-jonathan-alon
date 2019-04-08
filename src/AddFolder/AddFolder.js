@@ -14,16 +14,36 @@ export default class AddFolder extends Component {
     validationMessages: null,
   }
   
+  addFolder(folderName) {
+    const folder = {
+      name: folderName
+    }
+    const url = 'http://localhost:9090/folders'
+    fetch(url, {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(folder)
+    })
+    .then(res=>res.json())
+    .then(resJ => {
+      this.context.addFolder(resJ)
+      this.props.history.push('/')
+    });
+  }
+
   handleSubmit(event, folderName) {
     event.preventDefault()
     console.log('handle submit ran')
-    this.context.addFolder(folderName);
+    this.addFolder(folderName);
   }
 
   validateFolderName(name) {
     let fieldErrors = this.state.validationMessages;
     let hasError = false;
-    const checkFolderNames = this.context.folders.filter(folderName => name === folderName.name);
+    const checkFolderNames = this.context.folders.filter(folderName => name.trim().toLowerCase() === folderName.name.toLowerCase());
     
     if (checkFolderNames.length !== 0) {
       fieldErrors = 'Folder name already exists';
@@ -47,8 +67,10 @@ export default class AddFolder extends Component {
     }
   }
 
-  updateFolderName(name) {
-    this.setState({name}, () => this.validateFolderName(name))
+  updateFolderName = (e) => {
+    this.setState({
+      folderName: e.target.value
+    }, () => this.validateFolderName(e.target.value))
   }
   
   render() {
@@ -60,7 +82,7 @@ export default class AddFolder extends Component {
             <label htmlFor='folder-name-input'>
               Name
             </label>
-            <input type='text' id='folder-name-input' onChange={(e) => this.updateFolderName(e.target.value)}/>
+            <input type='text' id='folder-name-input' onChange={this.updateFolderName}/>
             <ValidationError hasError={!this.state.folderNameValid} message={this.state.validationMessages}/>
           </div>
           <div className='buttons'>

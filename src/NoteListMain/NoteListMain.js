@@ -9,14 +9,16 @@ export default function NoteListMain(props) {
   return (
     <section className='NoteListMain'>
       <ul>
-        {props.notes.map(note =>
-          <li key={note.id}>
-            <Note
-              id={note.id}
-              name={note.name}
-              modified={note.modified}
-            />
-          </li>
+        {props.notes.map(note => {
+            return (
+              <li key={note.id}>
+                <Note
+                  id={note.id}
+                  name={note.name}
+                  modified={note.modified}
+                />
+              </li>)
+          }
         )}
       </ul>
       <div className='NoteListMain__button-container'>

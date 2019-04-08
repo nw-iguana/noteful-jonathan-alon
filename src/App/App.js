@@ -10,6 +10,7 @@ import AddFolder from '../AddFolder/AddFolder'
 import AddNote from '../AddNote/AddNote'
 import { getNotesForFolder, findNote, findFolder } from '../notes-helpers'
 import './App.css'
+import ErrorBoundary from '../ErrorBoundary'
 
 class App extends Component {
   state = {
@@ -18,48 +19,25 @@ class App extends Component {
   };
 
   componentDidMount() {
+    this.fetchNote()
+    this.fetchFolder()
+  }
+
+  fetchNote = () => {
+    fetch('http://localhost:9090/notes')
+      .then(res => res.json())
+      .then(resJson => this.setState({
+        notes: resJson,
+      }))
+  }
+
+  fetchFolder = (folder) => {
     fetch('http://localhost:9090/folders')
       .then(res => res.json())
       .then(resJson => this.setState({
         folders: resJson,
       }))
       .catch(error => console.log(error))
-
-    fetch('http://localhost:9090/notes')
-      .then(res => res.json())
-      .then(resJson => this.setState({
-        notes: resJson,
-      }))
-      .catch(error => console.log(error))
-  }
-
-  postFolderName(folderName) {
-    const url = 'http://localhost:9090/folders'
-    fetch(url, {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({name: folderName})
-    })
-    .then(res=>res.json())
-    .then(res => console.log(res));
-  }
-
-  addNote(event, noteName, noteContent, folderId) {
-    console.log('noteName', noteName);
-    const url = 'http://localhost:9090/notes'
-    fetch(url, {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({name: noteName, content: noteContent, folderId: folderId})
-    })
-    .then(res=>res.json())
-    .then(res => console.log(res));
   }
 
   renderNavRoutes() {
@@ -146,22 +124,26 @@ class App extends Component {
     )
   }
 
-  handleDeleteNote = (id) => {
-    let newNotes = this.state.notes.filter((note) => {
-      return note.id !== id
+  deleteNote = (id) => {
+    console.log('id', id);
+    const url = `http://localhost:9090/notes/${id}`
+    fetch(url, {
+      method: 'delete',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     })
-    this.setState({
-      notes: newNotes,
-    })
+    .then(() => this.fetchNote())
   }
 
   render() {
     const contextValue = {
       folders: this.state.folders,
       notes: this.state.notes,
-      deleteNote: this.handleDeleteNote,
-      addFolder: this.postFolderName,
-      addNote: this.addNote
+      deleteNote: this.deleteNote,
+      addFolder: this.fetchFolder,
+      addNote: this.fetchNote,
+      componentDidMount: this.componentDidMount,
     }
 
     return (
@@ -177,9 +159,11 @@ class App extends Component {
               <FontAwesomeIcon icon='check-double' />
             </h1>
           </header>
-          <main className='App__main'>
-            {this.renderMainRoutes()}
-          </main>
+          <ErrorBoundary>
+            <main className='App__main'>
+              {this.renderMainRoutes()}
+            </main>
+          </ErrorBoundary>
         </div>
       </AppContext.Provider>
     )

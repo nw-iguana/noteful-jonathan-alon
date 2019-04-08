@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import NotefulForm from '../NotefulForm/NotefulForm'
 import './AddNote.css'
 import AppContext from '../AppContext';
+import ValidationError from '../ValidationError'
 
 export default class AddNote extends Component {
 
@@ -19,39 +20,43 @@ export default class AddNote extends Component {
       noteContent: '',
       contentValid: false,
       noteFolder: 'b0715efe-ffaf-11e8-8eb2-f2801f1b9fd1',
-      validationErrors: {
-        noteName: '',
-        noteContent: '',
-      },
+      noteNameError: '',
+      noteContentError: '',
     }
   }
   handleSubmit(event, noteName, noteContent, folderId) {
     event.preventDefault()
     console.log('handle submit ran')
-    this.context.addNote(event, noteName, noteContent, folderId);
+    this.addNote(event, noteName, noteContent, folderId);
   }
 
   validateName(name) {    
     let hasError = false;
+    let errorMessage = ''
 
     if (name.length === 0) {
       hasError = true;
+      errorMessage = 'Note name is required'
     }
 
     this.setState({
-      noteValid: !hasError
+      noteValid: !hasError,
+      noteNameError: errorMessage,
     })
   }
-
+  
   validateContent(content) {    
-    let hasError = false;
+    let hasError = false
+    let errorMessage = ''
 
     if (content.length === 0) {
       hasError = true;
+      errorMessage = 'Note must have content'
     }
 
     this.setState({
-      contentValid: !hasError
+      contentValid: !hasError,
+      noteContentError: errorMessage
     })
   }
 
@@ -61,16 +66,42 @@ export default class AddNote extends Component {
     }
   }
 
-  updateName(name) {
+  updateName = (e) => {
+    let name = e.target.value
     this.setState({noteName: name}, () => this.validateName(name))
   }
 
-  updateContent(content) {
+  updateContent = (e) => {
+    let content = e.target.value
     this.setState({noteContent: content}, () => this.validateContent(content))
   }
 
-  updateFolder(folderId) {
+  updateFolder = (e) => {
+    let folderId = e.target.value
     this.setState({noteFolder: folderId})
+  }
+
+  addNote(event, noteName, noteContent, folderId) {
+    console.log('noteName', noteName);
+    const newNote = {
+      name: noteName, 
+      content: noteContent, 
+      folderId: folderId,
+      modified: new Date(),
+    }
+    const url = 'http://localhost:9090/notes'
+    fetch(url, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(newNote)
+    })
+    .then(response => response.json())
+    .then(resJ => {
+        this.context.addNote(resJ)
+        this.props.history.push(`/note/${resJ.id}`)
+    })
   }
 
   render() {
@@ -82,19 +113,21 @@ export default class AddNote extends Component {
               <label htmlFor='note-name-input'>
                 Name
               </label>
-              <input type='text' id='note-name-input' onChange={e => this.updateName(e.target.value)} />
+              <ValidationError hasError={!this.state.noteValid} message={this.state.noteNameError}/>
+                <input type='text' id='note-name-input' onChange={this.updateName} />
             </div>
             <div className='field'>
               <label htmlFor='note-content-input'>
                 Content
               </label>
-              <textarea id='note-content-input' onChange={e => this.updateContent(e.target.value)} />
+              <ValidationError hasError={!this.state.contentValid} message={this.state.noteContentError} />
+              <textarea id='note-content-input' onChange={this.updateContent} />
             </div>
             <div className='field'>
               <label htmlFor='note-folder-select'>
                 Folder
               </label>
-              <select id='note-folder-select' onChange={(e) => this.updateFolder(e.target.value)} >
+              <select id='note-folder-select' onChange={this.updateFolder} >
                 {this.context.folders.map(folder =>
                   <option key={folder.id} value={folder.id}>
                     {folder.name}
@@ -103,7 +136,7 @@ export default class AddNote extends Component {
               </select>
             </div>
             <div className='buttons'>
-              <button type='submit'>
+              <button type='submit' disabled={!this.state.noteValid || !this.state.contentValid}>
                 Add note
               </button>
             </div>

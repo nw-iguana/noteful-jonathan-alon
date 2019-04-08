@@ -1,8 +1,8 @@
 import React from 'react'
 import './CircleButton.css'
 
-export default function NavCircleButton(props) {
-  const { tag, className, childrenm, ...otherProps } = props
+export default function CircleButton(props) {
+  const { tag, className, children, ...otherProps } = props
 
   return React.createElement(
     props.tag,
@@ -12,8 +12,4 @@ export default function NavCircleButton(props) {
     },
     props.children
   )
-}
-
-NavCircleButton.defaultProps ={
-  tag: 'a',
 }
