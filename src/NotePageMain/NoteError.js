@@ -13,7 +13,6 @@ export default class NoteError extends Component {
   }
 
   render() {
-
     if (this.state.hasError) {
       return (
         <h2>List cannot be displayed</h2>

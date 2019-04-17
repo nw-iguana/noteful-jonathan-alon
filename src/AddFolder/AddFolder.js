@@ -70,7 +70,7 @@ export default class AddFolder extends Component {
   updateFolderName = (e) => {
     this.setState({
       folderName: e.target.value
-    }, () => this.validateFolderName(e.target.value))
+    }, () => this.validateFolderName(this.state.folderName))
   }
   
   render() {
